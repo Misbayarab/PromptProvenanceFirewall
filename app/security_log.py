@@ -1,3 +1,4 @@
+
 from datetime import datetime
 
 from .database import save_security_event
@@ -10,23 +11,14 @@ def log_security_event(
     allowed: bool,
     reason: str,
     risk: str = "low",
-    risk_score: int = 0
+    risk_score: int = 0,
+    injection_detected: bool | None = None,
 ):
-
     timestamp = datetime.now().isoformat()
 
     # Convert Enum values to normal strings
-    trust_value = getattr(
-        trust_level,
-        "value",
-        str(trust_level)
-    )
-
-    action_value = getattr(
-        action,
-        "value",
-        str(action)
-    )
+    trust_value = getattr(trust_level, "value", str(trust_level))
+    action_value = getattr(action, "value", str(action))
 
     event = {
         "timestamp": timestamp,
@@ -36,7 +28,8 @@ def log_security_event(
         "allowed": allowed,
         "reason": reason,
         "risk": risk,
-        "risk_score": risk_score
+        "risk_score": risk_score,
+        "injection_detected": injection_detected,
     }
 
     print("\n--- SECURITY EVENT ---")
@@ -50,7 +43,8 @@ def log_security_event(
         allowed=allowed,
         reason=reason,
         risk=risk,
-        risk_score=risk_score
+        risk_score=risk_score,
+        injection_detected=injection_detected,
     )
 
     return event

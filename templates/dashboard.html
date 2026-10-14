@@ -1,17 +1,19 @@
+
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prompt Provenance Firewall</title>
 
     <style>
+        * { box-sizing: border-box; }
 
         body {
             font-family: Arial, sans-serif;
             background: #f4f6f8;
             margin: 0;
-            padding: 0;
+            color: #1f2937;
         }
 
         header {
@@ -21,14 +23,8 @@
             text-align: center;
         }
 
-        header h1 {
-            margin: 0;
-        }
-
-        header p {
-            margin-top: 8px;
-            color: #d1d5db;
-        }
+        header h1 { margin: 0; }
+        header p { color: #d1d5db; margin-bottom: 0; }
 
         .container {
             width: 90%;
@@ -36,48 +32,24 @@
             margin: 30px auto;
         }
 
-        /* ========================= */
-        /* STATISTICS */
-        /* ========================= */
-
         .cards {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 20px;
         }
 
-        .card {
+        .card, .section {
             background: white;
-            padding: 20px;
+            padding: 22px;
             border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,.1);
         }
 
-        .card h2 {
-            margin: 0;
-            font-size: 32px;
-        }
+        .card { text-align: center; }
+        .card h2 { margin: 0; font-size: 32px; }
+        .card p { color: #666; }
 
-        .card p {
-            color: #666;
-        }
-
-        /* ========================= */
-        /* SECTIONS */
-        /* ========================= */
-
-        .section {
-            background: white;
-            margin-top: 25px;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        /* ========================= */
-        /* BUTTONS */
-        /* ========================= */
+        .section { margin-top: 25px; }
 
         button {
             padding: 12px 18px;
@@ -90,65 +62,53 @@
             font-size: 14px;
         }
 
-        button:hover {
-            opacity: 0.85;
-        }
+        button:hover { opacity: .88; }
+        button:disabled { opacity: .55; cursor: not-allowed; }
+        .danger { background: #dc2626; }
+        .success { background: #16a34a; }
+        .warning { background: #d97706; }
 
-        .danger {
-            background: #dc2626;
-        }
-
-        .success {
-            background: #16a34a;
-        }
-
-        .warning {
-            background: #d97706;
-        }
-
-        /* ========================= */
-        /* INPUTS */
-        /* ========================= */
-
-        textarea,
-        input,
-        select {
+        textarea, input, select {
+            display: block;
             width: 100%;
-            padding: 10px;
-            margin-top: 6px;
-            margin-bottom: 15px;
-            box-sizing: border-box;
+            padding: 11px;
+            margin-top: 7px;
+            margin-bottom: 16px;
             border: 1px solid #ccc;
             border-radius: 6px;
             font-size: 14px;
         }
 
-        textarea {
-            height: 120px;
-            resize: vertical;
-        }
+        textarea { min-height: 120px; resize: vertical; }
+        label { font-weight: bold; }
 
-        label {
-            font-weight: bold;
-        }
-
-        /* ========================= */
-        /* RESULT */
-        /* ========================= */
-
-        #result {
+        .result {
             background: #111827;
             color: #e5e7eb;
-            padding: 15px;
-            border-radius: 6px;
+            padding: 18px;
+            border-radius: 7px;
             white-space: pre-wrap;
+            overflow-wrap: anywhere;
             overflow-x: auto;
-            min-height: 40px;
+            min-height: 45px;
+            max-height: 500px;
+            overflow-y: auto;
         }
 
-        /* ========================= */
-        /* PROVENANCE FLOW */
-        /* ========================= */
+        .status {
+            margin-top: 12px;
+            font-weight: bold;
+            overflow-wrap: anywhere;
+        }
+
+        .upload-area {
+            padding: 18px;
+            border: 2px dashed #93a3b8;
+            border-radius: 9px;
+            background: #f8fafc;
+        }
+
+        .file-info { color: #4b5563; font-size: 14px; }
 
         .provenance-flow {
             display: flex;
@@ -160,61 +120,36 @@
         }
 
         .flow-box {
-            min-width: 130px;
-            padding: 18px;
-            border-radius: 10px;
+            min-width: 125px;
+            padding: 16px;
+            border-radius: 9px;
             text-align: center;
             border: 2px solid #d1d5db;
             background: #f9fafb;
         }
 
-        .flow-box strong {
-            display: block;
-            margin-top: 8px;
-        }
-
-        .flow-box span {
+        .flow-box strong, .flow-box span {
             display: block;
             margin-top: 6px;
-            font-size: 12px;
-            color: #6b7280;
         }
 
-        .source-box {
-            border-color: #2563eb;
-        }
+        .flow-box span { font-size: 12px; color: #6b7280; }
+        .source-box { border-color: #2563eb; }
 
-        .untrusted-box {
+        .untrusted-box, .decision-box {
             border-color: #dc2626;
             background: #fee2e2;
         }
 
-        .detector-box {
-            border-color: #7c3aed;
-        }
+        .detector-box { border-color: #7c3aed; }
 
         .risk-box-flow {
             border-color: #d97706;
             background: #fef3c7;
         }
 
-        .policy-box {
-            border-color: #059669;
-        }
-
-        .decision-box {
-            border-color: #dc2626;
-            background: #fee2e2;
-        }
-
-        .arrow {
-            font-size: 25px;
-            font-weight: bold;
-        }
-
-        /* ========================= */
-        /* RISK GUIDE */
-        /* ========================= */
+        .policy-box { border-color: #059669; }
+        .arrow { font-size: 24px; font-weight: bold; }
 
         .risk-guide {
             display: grid;
@@ -222,26 +157,12 @@
             gap: 15px;
         }
 
-        .risk-box {
-            padding: 15px;
-            border-radius: 8px;
-        }
+        .risk-box { padding: 15px; border-radius: 8px; }
+        .low { background: #dcfce7; }
+        .medium { background: #fef3c7; }
+        .high { background: #fee2e2; }
 
-        .low {
-            background: #dcfce7;
-        }
-
-        .medium {
-            background: #fef3c7;
-        }
-
-        .high {
-            background: #fee2e2;
-        }
-
-        /* ========================= */
-        /* TABLE */
-        /* ========================= */
+        .table-wrap { overflow-x: auto; }
 
         table {
             width: 100%;
@@ -249,839 +170,479 @@
             margin-top: 15px;
         }
 
-        th,
-        td {
-            padding: 10px;
+        th, td {
+            padding: 11px;
             border-bottom: 1px solid #ddd;
             text-align: left;
             font-size: 13px;
+            overflow-wrap: anywhere;
         }
 
-        th {
-            background: #f3f4f6;
+        th { background: #f3f4f6; }
+        .blocked { color: #dc2626; font-weight: bold; }
+        .allowed { color: #16a34a; font-weight: bold; }
+        .injection-yes { color: #dc2626; font-weight: bold; }
+        .injection-no { color: #16a34a; font-weight: bold; }
+
+        @media (max-width: 800px) {
+            .cards { grid-template-columns: repeat(2, 1fr); }
+            .risk-guide { grid-template-columns: 1fr; }
+            .container { width: 94%; }
         }
 
-        .blocked {
-            color: #dc2626;
-            font-weight: bold;
+        @media (max-width: 480px) {
+            .cards { grid-template-columns: 1fr 1fr; gap: 10px; }
+            .card, .section { padding: 15px; }
+            header h1 { font-size: 23px; }
+            button { max-width: 100%; }
         }
-
-        .allowed {
-            color: #16a34a;
-            font-weight: bold;
-        }
-
-        /* ========================= */
-        /* MOBILE */
-        /* ========================= */
-
-        @media(max-width: 800px) {
-
-            .cards {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .risk-guide {
-                grid-template-columns: 1fr;
-            }
-
-        }
-
     </style>
-
 </head>
 
-
 <body>
-
-
-<!-- ========================= -->
-<!-- HEADER -->
-<!-- ========================= -->
-
 <header>
-
     <h1>🛡 Prompt Provenance Firewall</h1>
-
-    <p>
-        Provenance-aware security layer
-        for AI agents
-    </p>
-
+    <p>Provenance-aware security layer for AI agents</p>
 </header>
 
+<main class="container">
 
-<div class="container">
+    <section class="cards">
+        <div class="card"><h2 id="totalEvents">0</h2><p>Total Events</p></div>
+        <div class="card"><h2 id="blockedEvents">0</h2><p>Blocked</p></div>
+        <div class="card"><h2 id="allowedEvents">0</h2><p>Allowed</p></div>
+        <div class="card"><h2 id="highRiskEvents">0</h2><p>High Risk</p></div>
+    </section>
 
-
-    <!-- ========================= -->
-    <!-- STATISTICS -->
-    <!-- ========================= -->
-
-    <div class="cards">
-
-        <div class="card">
-
-            <h2 id="totalEvents">0</h2>
-
-            <p>
-                Total Events
-            </p>
-
-        </div>
-
-
-        <div class="card">
-
-            <h2 id="blockedEvents">0</h2>
-
-            <p>
-                Blocked
-            </p>
-
-        </div>
-
-
-        <div class="card">
-
-            <h2 id="allowedEvents">0</h2>
-
-            <p>
-                Allowed
-            </p>
-
-        </div>
-
-
-        <div class="card">
-
-            <h2 id="highRiskEvents">0</h2>
-
-            <p>
-                High Risk
-            </p>
-
-        </div>
-
-    </div>
-
-
-    <!-- ========================= -->
-    <!-- SECURITY TESTS -->
-    <!-- ========================= -->
-
-    <div class="section">
-
+    <section class="section">
         <h2>Security Tests</h2>
+        <p>Run predefined security scenarios.</p>
+        <button class="danger" onclick="runAttack()">🚨 Test Malicious Website</button>
+        <button class="success" onclick="runLegitimate()">✅ Test Legitimate Website</button>
+        <button class="warning" onclick="runPDF()">📄 Test Sample PDF</button>
+        <button onclick="loadEvents()">🔄 Refresh Events</button>
+    </section>
 
-        <p>
-            Run predefined security scenarios.
-        </p>
+    <section class="section">
+        <h2>🌐 Custom Website Security Test</h2>
+        <p>Inspect simulated website content before allowing a requested action.</p>
 
+        <label for="websiteName">Website Name</label>
+        <input id="websiteName" type="text" placeholder="example-shopping-site.com">
 
-        <button
-            class="danger"
-            onclick="runAttack()">
+        <label for="websiteContent">Website Content</label>
+        <textarea id="websiteContent" placeholder="Paste simulated website content here..."></textarea>
 
-            🚨 Test Malicious Website
-
-        </button>
-
-
-        <button
-            class="success"
-            onclick="runLegitimate()">
-
-            ✅ Test Legitimate Website
-
-        </button>
-
-
-        <button
-            class="warning"
-            onclick="runPDF()">
-
-            📄 Test Malicious PDF
-
-        </button>
-
-
-        <button
-            onclick="loadEvents()">
-
-            🔄 Refresh
-
-        </button>
-
-    </div>
-
-
-    <!-- ========================= -->
-    <!-- CUSTOM WEBSITE TEST -->
-    <!-- ========================= -->
-
-    <div class="section">
-
-        <h2>
-            🌐 Custom Website Security Test
-        </h2>
-
-        <p>
-            Enter simulated website content and
-            let the firewall inspect it before
-            allowing an action.
-        </p>
-
-
-        <label>
-            Website Name
-        </label>
-
-        <input
-            id="websiteName"
-            type="text"
-            placeholder="example-shopping-site.com"
-        >
-
-
-        <label>
-            Website Content
-        </label>
-
-        <textarea
-            id="websiteContent"
-            placeholder="Paste simulated website content here..."
-        ></textarea>
-
-
-        <label>
-            Requested Action
-        </label>
-
+        <label for="websiteAction">Requested Action</label>
         <select id="websiteAction">
-
-            <option value="answer">
-                Answer
-            </option>
-
-            <option value="search">
-                Search
-            </option>
-
-            <option value="send_email">
-                Send Email
-            </option>
-
-            <option value="purchase">
-                Purchase
-            </option>
-
-            <option value="delete">
-                Delete
-            </option>
-
-            <option value="modify_database">
-                Modify Database
-            </option>
-
+            <option value="answer">Answer</option>
+            <option value="search">Search</option>
+            <option value="send_email">Send Email</option>
+            <option value="purchase">Purchase</option>
+            <option value="delete">Delete</option>
+            <option value="modify_database">Modify Database</option>
         </select>
 
+        <button onclick="inspectCustomWebsite()">🔍 Inspect Website</button>
+    </section>
 
-        <button
-            onclick="inspectCustomWebsite()">
+    <section class="section" id="pdfUploadSection">
+        <h2>📄 Upload &amp; Inspect a PDF</h2>
+        <p>Select a PDF to extract its text and inspect its content.</p>
 
-            🔍 Inspect Website
+        <div class="upload-area">
+            <label for="pdfFile">Choose PDF Document</label>
+            <input type="file" id="pdfFile" accept=".pdf,application/pdf">
 
-        </button>
+            <p class="file-info">PDF files only. Maximum file size: 10 MB.</p>
 
-    </div>
+            <button type="button" id="uploadPdfButton" onclick="uploadPDF()">
+                🔎 Upload &amp; Inspect PDF
+            </button>
 
+            <button type="button" onclick="clearPDFResult()">Clear Result</button>
+            <p id="pdfStatus" class="status" role="status" aria-live="polite"></p>
+        </div>
 
-    <!-- ========================= -->
-    <!-- PROVENANCE FLOW -->
-    <!-- ========================= -->
+        <div id="pdfResult" style="display:none;">
+            <h3>PDF Inspection Result</h3>
+            <div id="pdfDecisionBanner" class="result"></div>
 
-    <div class="section">
+            <p><strong>Filename:</strong> <span id="pdfFilename"></span></p>
+            <p><strong>Source type:</strong> <span id="pdfSourceType"></span></p>
+            <p><strong>Source name:</strong> <span id="pdfSourceName"></span></p>
+            <p><strong>Trust level:</strong> <span id="pdfTrust"></span></p>
+            <p><strong>Risk:</strong> <span id="pdfRisk"></span></p>
+            <p><strong>Risk score:</strong> <span id="pdfRiskScore"></span></p>
+            <p><strong>Injection detected:</strong> <span id="pdfInjection"></span></p>
+            <p><strong>Firewall reason:</strong> <span id="pdfReason"></span></p>
 
-        <h2>
-            🔗 Provenance & Security Flow
-        </h2>
+            <h3>Extracted Text</h3>
+            <pre id="pdfExtractedText" class="result"></pre>
+        </div>
+    </section>
 
+    <section class="section">
+        <h2>🔗 Provenance &amp; Inspection Flow</h2>
         <div class="provenance-flow">
-
-
-            <div class="flow-box source-box">
-
-                🌐
-
-                <strong>
-                    External Source
-                </strong>
-
-                <span>
-                    Website / PDF
-                </span>
-
-            </div>
-
-
-            <div class="arrow">
-                →
-            </div>
-
-
-            <div class="flow-box untrusted-box">
-
-                🔴
-
-                <strong>
-                    Provenance Tracker
-                </strong>
-
-                <span>
-                    UNTRUSTED DATA
-                </span>
-
-            </div>
-
-
-            <div class="arrow">
-                →
-            </div>
-
-
-            <div class="flow-box detector-box">
-
-                🔍
-
-                <strong>
-                    Injection Detector
-                </strong>
-
-                <span>
-                    Analyze Content
-                </span>
-
-            </div>
-
-
-            <div class="arrow">
-                →
-            </div>
-
-
-            <div class="flow-box risk-box-flow">
-
-                ⚠️
-
-                <strong>
-                    Risk Analyzer
-                </strong>
-
-                <span>
-                    Calculate Risk
-                </span>
-
-            </div>
-
-
-            <div class="arrow">
-                →
-            </div>
-
-
-            <div class="flow-box policy-box">
-
-                🛡️
-
-                <strong>
-                    Policy Engine
-                </strong>
-
-                <span>
-                    Check Action
-                </span>
-
-            </div>
-
-
-            <div class="arrow">
-                →
-            </div>
-
-
-            <div class="flow-box decision-box">
-
-                🚫
-
-                <strong>
-                    ALLOW / BLOCK
-                </strong>
-
-                <span>
-                    Security Decision
-                </span>
-
-            </div>
-
-
+            <div class="flow-box source-box">📥 Source<strong>Website / PDF</strong><span>Incoming content</span></div>
+            <div class="arrow">→</div>
+            <div class="flow-box untrusted-box">🔒 Provenance<strong>Trust Check</strong><span>Source metadata</span></div>
+            <div class="arrow">→</div>
+            <div class="flow-box detector-box">🕵️ Detector<strong>Injection Check</strong><span>Pattern analysis</span></div>
+            <div class="arrow">→</div>
+            <div class="flow-box risk-box-flow">⚠️ Risk<strong>Risk Scoring</strong><span>Evaluate risk</span></div>
+            <div class="arrow">→</div>
+            <div class="flow-box policy-box">⚖️ Policy<strong>Allow / Block</strong><span>Decision</span></div>
         </div>
+    </section>
 
-    </div>
-
-
-    <!-- ========================= -->
-    <!-- RESULT -->
-    <!-- ========================= -->
-
-    <div class="section">
-
-        <h2>
-            Security Test Result
-        </h2>
-
-        <div id="result">
-
-            No test executed yet.
-
-        </div>
-
-    </div>
-
-
-    <!-- ========================= -->
-    <!-- RISK GUIDE -->
-    <!-- ========================= -->
-
-    <div class="section">
-
-        <h2>
-            Risk Guide
-        </h2>
-
-
+    <section class="section">
+        <h2>Risk Guide</h2>
         <div class="risk-guide">
-
-
-            <div class="risk-box low">
-
-                <h3>
-                    🟢 LOW
-                </h3>
-
-                <p>
-                    Normal activity with no
-                    detected injection.
-                </p>
-
-            </div>
-
-
-            <div class="risk-box medium">
-
-                <h3>
-                    🟡 MEDIUM
-                </h3>
-
-                <p>
-                    Suspicious activity requiring
-                    additional review.
-                </p>
-
-            </div>
-
-
-            <div class="risk-box high">
-
-                <h3>
-                    🔴 HIGH
-                </h3>
-
-                <p>
-                    Prompt injection detected or
-                    sensitive action blocked.
-                </p>
-
-            </div>
-
-
+            <div class="risk-box low"><h3>🟢 Low Risk</h3><p>Lower risk under configured firewall rules.</p></div>
+            <div class="risk-box medium"><h3>🟡 Medium Risk</h3><p>Requires attention under configured policy.</p></div>
+            <div class="risk-box high"><h3>🔴 High Risk</h3><p>Suspicious content or high-risk actions were identified.</p></div>
         </div>
+    </section>
 
-    </div>
+    <section class="section">
+        <h2>🔍 Latest Security Test Result</h2>
+        <pre id="result" class="result">Run a security test to see its result here.</pre>
+    </section>
 
+    <section class="section">
+        <h2>📋 Security Event Log</h2>
+        <p>Events returned by the backend are displayed below.</p>
+        <button onclick="loadEvents()">🔄 Refresh Event Log</button>
+        <p id="eventStatus" role="status" aria-live="polite"></p>
 
-    <!-- ========================= -->
-    <!-- SECURITY EVENT LOG -->
-    <!-- ========================= -->
-
-    <div class="section">
-
-        <h2>
-            Security Event Log
-        </h2>
-
-
-        <table>
-
-            <thead>
-
-                <tr>
-
-                    <th>ID</th>
-
-                    <th>Source</th>
-
-                    <th>Trust</th>
-
-                    <th>Action</th>
-
-                    <th>Status</th>
-
-                    <th>Risk</th>
-
-                    <th>Score</th>
-
-                    <th>Reason</th>
-
-                </tr>
-
-            </thead>
-
-
-            <tbody id="eventTable">
-
-            </tbody>
-
-        </table>
-
-    </div>
-
-
-</div>
-
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Source</th>
+                        <th>Action</th>
+                        <th>Decision</th>
+                        <th>Risk</th>
+                        <th>Risk Score</th>
+                        <th>Injection</th>
+                    </tr>
+                </thead>
+                <tbody id="eventTable">
+                    <tr><td colspan="7">Loading events...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
 
 <script>
+    let eventRefreshInProgress = false;
 
+    function showResult(data) {
+        document.getElementById("result").textContent =
+            JSON.stringify(data, null, 2);
+    }
 
-// ========================================
-// LOAD SECURITY EVENTS
-// ========================================
+    async function readResponse(response) {
+        let data;
 
-async function loadEvents() {
+        try {
+            data = await response.json();
+        } catch {
+            throw new Error("The server returned an unreadable response.");
+        }
 
-    try {
+        if (!response.ok) {
+            throw new Error(data.detail || data.error || "The request failed.");
+        }
 
-        const response =
-            await fetch("/security-events");
+        return data;
+    }
 
+    async function runTest(url) {
+        try {
+            const response = await fetch(url);
+            const data = await readResponse(response);
+            showResult(data);
+        } catch (error) {
+            showResult({ error: error.message });
+        } finally {
+            await loadEvents();
+        }
+    }
 
-        const data =
-            await response.json();
+    function runAttack() {
+        return runTest("/demo-attack");
+    }
 
+    function runLegitimate() {
+        return runTest("/demo-legitimate");
+    }
 
-        const events =
-            data.events;
+    function runPDF() {
+        return runTest("/inspect-pdf");
+    }
 
+    async function inspectCustomWebsite() {
+        const website = document.getElementById("websiteName").value.trim();
+        const content = document.getElementById("websiteContent").value.trim();
+        const action = document.getElementById("websiteAction").value;
 
-        document.getElementById(
-            "totalEvents"
-        ).textContent =
-            events.length;
+        if (!website || !content) {
+            showResult({ error: "Enter both the website name and its content." });
+            return;
+        }
 
+        const params = new URLSearchParams({ website, content, action });
 
-        const blocked =
-            events.filter(
-                event => !event.allowed
-            ).length;
-
-
-        const allowed =
-            events.filter(
-                event => event.allowed
-            ).length;
-
-
-        const highRisk =
-            events.filter(
-                event =>
-                    event.risk === "high"
-            ).length;
-
-
-        document.getElementById(
-            "blockedEvents"
-        ).textContent =
-            blocked;
-
-
-        document.getElementById(
-            "allowedEvents"
-        ).textContent =
-            allowed;
-
-
-        document.getElementById(
-            "highRiskEvents"
-        ).textContent =
-            highRisk;
-
-
-        const table =
-            document.getElementById(
-                "eventTable"
+        try {
+            const response = await fetch(
+                "/custom-web-inspect?" + params.toString(),
+                { method: "POST" }
             );
 
+            const data = await readResponse(response);
+            showResult(data);
+        } catch (error) {
+            showResult({ error: error.message });
+        } finally {
+            await loadEvents();
+        }
+    }
 
-        table.innerHTML = "";
+    async function uploadPDF() {
+        const input = document.getElementById("pdfFile");
+        const status = document.getElementById("pdfStatus");
+        const button = document.getElementById("uploadPdfButton");
+        const resultBox = document.getElementById("pdfResult");
+        const file = input.files[0];
 
+        if (!file) {
+            status.textContent = "Please choose a PDF file first.";
+            return;
+        }
 
-        events.forEach(event => {
+        if (!file.name.toLowerCase().endsWith(".pdf")) {
+            status.textContent = "Please choose a PDF file.";
+            return;
+        }
 
-            const row =
-                document.createElement("tr");
+        if (file.size === 0) {
+            status.textContent = "The selected file is empty.";
+            return;
+        }
 
+        if (file.size > 10 * 1024 * 1024) {
+            status.textContent = "The file exceeds the 10 MB limit.";
+            return;
+        }
 
-            row.innerHTML = `
+        const formData = new FormData();
+        formData.append("file", file);
 
-                <td>
-                    ${event.id}
-                </td>
+        button.disabled = true;
+        status.textContent = "Uploading and inspecting PDF...";
+        resultBox.style.display = "none";
 
-                <td>
-                    ${event.source_name}
-                </td>
+        try {
+            const response = await fetch("/upload-pdf", {
+                method: "POST",
+                body: formData
+            });
 
-                <td>
-                    ${event.trust_level}
-                </td>
+            const data = await readResponse(response);
 
-                <td>
-                    ${event.action}
-                </td>
+            document.getElementById("pdfFilename").textContent =
+                data.filename || file.name;
+            document.getElementById("pdfSourceType").textContent =
+                data.source_type ?? "Unknown";
+            document.getElementById("pdfSourceName").textContent =
+                data.source_name ?? "Unknown";
+            document.getElementById("pdfTrust").textContent =
+                data.trust_level ?? "Unknown";
+            document.getElementById("pdfRisk").textContent =
+                data.risk ?? "Unknown";
+            document.getElementById("pdfRiskScore").textContent =
+                data.risk_score ?? "Unknown";
 
-                <td class="${
-                    event.allowed
-                    ? "allowed"
-                    : "blocked"
-                }">
+            const injectionText =
+                data.injection_detected === true ? "Yes" :
+                data.injection_detected === false ? "No" : "Unknown";
 
-                    ${
-                        event.allowed
-                        ? "ALLOWED"
-                        : "BLOCKED"
+            document.getElementById("pdfInjection").textContent = injectionText;
+            document.getElementById("pdfReason").textContent =
+                data.firewall_reason || data.reason || "No reason provided.";
+            document.getElementById("pdfExtractedText").textContent =
+                data.extracted_text || "No extracted text was returned.";
+
+            const decision =
+                data.allowed === true ? "DECISION: ALLOWED" :
+                data.allowed === false ? "DECISION: BLOCKED" :
+                "DECISION: UNKNOWN";
+
+            document.getElementById("pdfDecisionBanner").textContent =
+                decision + "\n\n" +
+                "Injection detected: " + injectionText + "\n" +
+                "Risk: " + (data.risk ?? "Unknown") + "\n" +
+                "Risk score: " + (data.risk_score ?? "Unknown");
+
+            resultBox.style.display = "block";
+            status.textContent = "PDF inspection completed.";
+            showResult(data);
+
+        } catch (error) {
+            status.textContent = "PDF inspection failed: " + error.message;
+        } finally {
+            button.disabled = false;
+
+            // Always attempt a refresh after the upload request finishes.
+            await loadEvents();
+        }
+    }
+
+    function clearPDFResult() {
+        document.getElementById("pdfFile").value = "";
+        document.getElementById("pdfStatus").textContent = "";
+        document.getElementById("pdfResult").style.display = "none";
+    }
+
+    async function loadEvents() {
+        if (eventRefreshInProgress) return;
+
+        eventRefreshInProgress = true;
+
+        const status = document.getElementById("eventStatus");
+        const table = document.getElementById("eventTable");
+
+        try {
+            // Cache-busting prevents stale browser/proxy responses.
+            const response = await fetch(
+                "/security-events?_=" + Date.now(),
+                { cache: "no-store" }
+            );
+
+            const data = await readResponse(response);
+            const events = Array.isArray(data.events) ? data.events : [];
+
+            document.getElementById("totalEvents").textContent =
+                data.total_events ?? events.length;
+
+            const isBlocked = event =>
+                event.allowed === false ||
+                String(event.decision || "").toLowerCase() === "blocked";
+
+            const isAllowed = event =>
+                event.allowed === true ||
+                String(event.decision || "").toLowerCase() === "allowed";
+
+            const blockedCount = events.filter(isBlocked).length;
+            const allowedCount = events.filter(isAllowed).length;
+            const highRiskCount = events.filter(event =>
+                String(event.risk || "").toLowerCase() === "high" ||
+                Number(event.risk_score || 0) >= 70
+            ).length;
+
+            document.getElementById("blockedEvents").textContent = blockedCount;
+            document.getElementById("allowedEvents").textContent = allowedCount;
+            document.getElementById("highRiskEvents").textContent = highRiskCount;
+
+            table.replaceChildren();
+
+            if (events.length === 0) {
+                const row = document.createElement("tr");
+                const cell = document.createElement("td");
+                cell.colSpan = 7;
+                cell.textContent = "No security events found.";
+                row.appendChild(cell);
+                table.appendChild(row);
+            } else {
+                // Sort by numeric ID descending when available.
+                const sortedEvents = events.slice().sort((a, b) => {
+                    const idA = Number(a.id ?? a.event_id);
+                    const idB = Number(b.id ?? b.event_id);
+
+                    if (Number.isFinite(idA) && Number.isFinite(idB)) {
+                        return idB - idA;
                     }
 
-                </td>
+                    return 0;
+                });
 
-                <td>
-                    ${event.risk}
-                </td>
+                sortedEvents.forEach(event => {
+                    const row = document.createElement("tr");
 
-                <td>
-                    ${event.risk_score}/100
-                </td>
+                    const decision =
+                        event.allowed === true ? "Allowed" :
+                        event.allowed === false ? "Blocked" :
+                        event.decision ?? "Unknown";
 
-                <td>
-                    ${event.reason}
-                </td>
+                    const injection =
+                        event.injection_detected === true ? "Yes" :
+                        event.injection_detected === false ? "No" : "—";
 
-            `;
+                    const values = [
+                        event.id ?? event.event_id ?? "—",
+                        event.source_name ?? event.source ?? "—",
+                        event.action ?? event.requested_action ?? "—",
+                        decision,
+                        event.risk ?? "—",
+                        event.risk_score ?? "—",
+                        injection
+                    ];
 
+                    values.forEach((value, index) => {
+                        const cell = document.createElement("td");
+                        cell.textContent = String(value);
 
+                        if (index === 3) {
+                            if (String(value).toLowerCase() === "blocked") {
+                                cell.className = "blocked";
+                            } else if (
+                                String(value).toLowerCase() === "allowed"
+                            ) {
+                                cell.className = "allowed";
+                            }
+                        }
+
+                        if (index === 6) {
+                            if (value === "Yes") {
+                                cell.className = "injection-yes";
+                            } else if (value === "No") {
+                                cell.className = "injection-no";
+                            }
+                        }
+
+                        row.appendChild(cell);
+                    });
+
+                    table.appendChild(row);
+                });
+            }
+
+            status.textContent =
+                "Security events refreshed at " + new Date().toLocaleTimeString();
+
+        } catch (error) {
+            status.textContent = "Could not load events: " + error.message;
+            table.replaceChildren();
+
+            const row = document.createElement("tr");
+            const cell = document.createElement("td");
+            cell.colSpan = 7;
+            cell.textContent = "Unable to load events.";
+            row.appendChild(cell);
             table.appendChild(row);
-
-        });
-
+        } finally {
+            eventRefreshInProgress = false;
+        }
     }
 
-    catch(error) {
-
-        console.error(error);
-
-    }
-
-}
-
-
-// ========================================
-// MALICIOUS WEBSITE DEMO
-// ========================================
-
-async function runAttack() {
-
-    const response =
-        await fetch("/demo-attack");
-
-
-    const data =
-        await response.json();
-
-
-    showResult(data);
-
-
+    // Initial load and periodic refresh while the dashboard is open.
     loadEvents();
-
-}
-
-
-// ========================================
-// LEGITIMATE WEBSITE DEMO
-// ========================================
-
-async function runLegitimate() {
-
-    const response =
-        await fetch("/demo-legitimate");
-
-
-    const data =
-        await response.json();
-
-
-    showResult(data);
-
-
-    loadEvents();
-
-}
-
-
-// ========================================
-// PDF TEST
-// ========================================
-
-async function runPDF() {
-
-    const response =
-        await fetch("/inspect-pdf");
-
-
-    const data =
-        await response.json();
-
-
-    showResult(data);
-
-
-    loadEvents();
-
-}
-
-
-// ========================================
-// CUSTOM WEBSITE TEST
-// ========================================
-
-async function inspectCustomWebsite() {
-
-    const website =
-        document.getElementById(
-            "websiteName"
-        ).value;
-
-
-    const content =
-        document.getElementById(
-            "websiteContent"
-        ).value;
-
-
-    const action =
-        document.getElementById(
-            "websiteAction"
-        ).value;
-
-
-    if (!website || !content) {
-
-        document.getElementById(
-            "result"
-        ).textContent =
-            "Please enter both website name and website content.";
-
-        return;
-
-    }
-
-
-    const params =
-        new URLSearchParams({
-
-            website: website,
-
-            content: content,
-
-            action: action
-
-        });
-
-
-    try {
-
-        const response =
-            await fetch(
-                "/custom-web-inspect?" +
-                params.toString(),
-                {
-                    method: "POST"
-                }
-            );
-
-
-        const data =
-            await response.json();
-
-
-        showResult(data);
-
-
-        loadEvents();
-
-    }
-
-    catch(error) {
-
-        document.getElementById(
-            "result"
-        ).textContent =
-            "Error connecting to the firewall.";
-
-        console.error(error);
-
-    }
-
-}
-
-
-// ========================================
-// SHOW RESULT
-// ========================================
-
-function showResult(data) {
-
-    document.getElementById(
-        "result"
-    ).textContent =
-        JSON.stringify(
-            data,
-            null,
-            2
-        );
-
-}
-
-
-// ========================================
-// LOAD EVENTS WHEN PAGE OPENS
-// ========================================
-
-loadEvents();
-
-
+    setInterval(loadEvents, 10000);
 </script>
-
-
 </body>
-
 </html>

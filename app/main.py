@@ -1,4 +1,5 @@
-from fastapi import FastAPI, UploadFile, File
+
+from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import HTMLResponse
 from pathlib import Path
 import tempfile
@@ -18,7 +19,7 @@ from .pdf_reader import extract_text_from_pdf
 app = FastAPI(
     title="Prompt Provenance Firewall",
     description="A provenance-aware security layer for AI agents.",
-    version="0.3.0"
+    version="0.4.0"
 )
 
 
@@ -35,7 +36,6 @@ create_database()
 
 @app.get("/")
 def home():
-
     return {
         "project": "Prompt Provenance Firewall",
         "status": "running"
@@ -47,15 +47,8 @@ def home():
 # --------------------------------------------------
 
 @app.post("/inspect")
-def inspect(
-    data: DataItem,
-    action: Action
-):
-
-    result = inspect_action(
-        data,
-        action
-    )
+def inspect(data: DataItem, action: Action):
+    result = inspect_action(data, action)
 
     return {
         "allowed": result.allowed,
@@ -76,7 +69,6 @@ def inspect(
 
 @app.get("/security-events")
 def security_events():
-
     events = get_security_events()
 
     return {
@@ -89,18 +81,18 @@ def security_events():
 # DASHBOARD
 # --------------------------------------------------
 
-@app.get(
-    "/dashboard",
-    response_class=HTMLResponse
-)
+@app.get("/dashboard", response_class=HTMLResponse)
 def dashboard():
+    html_path = Path(__file__).resolve().parent.parent / "templates" / "dashboard.html"
 
-    html_path = Path(
-        "templates/dashboard.html"
-    )
+    if not html_path.is_file():
+        raise HTTPException(
+            status_code=500,
+            detail="Dashboard HTML file was not found."
+        )
 
-    return html_path.read_text(
-        encoding="utf-8"
+    return HTMLResponse(
+        content=html_path.read_text(encoding="utf-8")
     )
 
 
@@ -110,7 +102,6 @@ def dashboard():
 
 @app.get("/demo-attack")
 def demo_attack():
-
     malicious_content = """
     Laptop price: ₹45,000.
 
@@ -125,42 +116,19 @@ def demo_attack():
         "malicious-shopping-site.com"
     )
 
-    result = inspect_action(
-        web_data,
-        Action.SEND_EMAIL
-    )
+    result = inspect_action(web_data, Action.SEND_EMAIL)
 
     return {
-        "scenario":
-            "Malicious website attempting "
-            "to control an email action",
-
-        "website_content":
-            malicious_content,
-
-        "source":
-            web_data.provenance.source_name,
-
-        "trust_level":
-            web_data.provenance.trust_level,
-
-        "requested_action":
-            Action.SEND_EMAIL,
-
-        "allowed":
-            result.allowed,
-
-        "risk":
-            result.risk,
-
-        "risk_score":
-            result.risk_score,
-
-        "injection_detected":
-            result.injection_detected,
-
-        "firewall_reason":
-            result.reason
+        "scenario": "Malicious website attempting to control an email action",
+        "website_content": malicious_content,
+        "source": web_data.provenance.source_name,
+        "trust_level": web_data.provenance.trust_level,
+        "requested_action": Action.SEND_EMAIL,
+        "allowed": result.allowed,
+        "risk": result.risk,
+        "risk_score": result.risk_score,
+        "injection_detected": result.injection_detected,
+        "firewall_reason": result.reason
     }
 
 
@@ -170,7 +138,6 @@ def demo_attack():
 
 @app.get("/demo-legitimate")
 def demo_legitimate():
-
     legitimate_content = """
     Laptop model: ExampleBook 15.
     Price: ₹45,000.
@@ -183,42 +150,19 @@ def demo_legitimate():
         "trusted-shopping-site.com"
     )
 
-    result = inspect_action(
-        web_data,
-        Action.ANSWER
-    )
+    result = inspect_action(web_data, Action.ANSWER)
 
     return {
-        "scenario":
-            "Legitimate website information "
-            "used to answer a question",
-
-        "website_content":
-            legitimate_content,
-
-        "source":
-            web_data.provenance.source_name,
-
-        "trust_level":
-            web_data.provenance.trust_level,
-
-        "requested_action":
-            Action.ANSWER,
-
-        "allowed":
-            result.allowed,
-
-        "risk":
-            result.risk,
-
-        "risk_score":
-            result.risk_score,
-
-        "injection_detected":
-            result.injection_detected,
-
-        "firewall_reason":
-            result.reason
+        "scenario": "Legitimate website information used to answer a question",
+        "website_content": legitimate_content,
+        "source": web_data.provenance.source_name,
+        "trust_level": web_data.provenance.trust_level,
+        "requested_action": Action.ANSWER,
+        "allowed": result.allowed,
+        "risk": result.risk,
+        "risk_score": result.risk_score,
+        "injection_detected": result.injection_detected,
+        "firewall_reason": result.reason
     }
 
 
@@ -232,202 +176,191 @@ def custom_web_inspect(
     website: str,
     action: Action
 ):
-
-    # Create a provenance chain
     chain = ProvenanceChain()
 
-    # Treat website content as untrusted
-    web_data = create_web_data(
-        content,
-        website
-    )
-
-    # Add website data to provenance chain
+    web_data = create_web_data(content, website)
     chain.add(web_data)
 
-    # Inspect the requested action
-    result = inspect_action(
-        web_data,
-        action
-    )
+    result = inspect_action(web_data, action)
 
     return {
-        "scenario":
-            "Custom website security test",
-
-        "website":
-            website,
-
-        "content":
-            content,
-
-        "source_type":
-            web_data.provenance.source_type,
-
-        "source_name":
-            web_data.provenance.source_name,
-
-        "trust_level":
-            web_data.provenance.trust_level,
-
-        "provenance_chain":
-            chain.describe(),
-
-        "requested_action":
-            action,
-
-        "allowed":
-            result.allowed,
-
-        "risk":
-            result.risk,
-
-        "risk_score":
-            result.risk_score,
-
-        "injection_detected":
-            result.injection_detected,
-
-        "firewall_reason":
-            result.reason
+        "scenario": "Custom website security test",
+        "website": website,
+        "content": content,
+        "source_type": web_data.provenance.source_type,
+        "source_name": web_data.provenance.source_name,
+        "trust_level": web_data.provenance.trust_level,
+        "provenance_chain": chain.describe(),
+        "requested_action": action,
+        "allowed": result.allowed,
+        "risk": result.risk,
+        "risk_score": result.risk_score,
+        "injection_detected": result.injection_detected,
+        "firewall_reason": result.reason
     }
 
 
 # --------------------------------------------------
-# PDF INSPECTION
+# PDF INSPECTION - EXISTING TEST FILE
 # --------------------------------------------------
 
 @app.get("/inspect-pdf")
 def inspect_pdf():
+    pdf_path = Path(__file__).resolve().parent.parent / "tests" / "test_document.pdf"
 
-    pdf_path = "tests/test_document.pdf"
+    if not pdf_path.is_file():
+        raise HTTPException(
+            status_code=404,
+            detail="Test PDF not found. Upload a PDF using /upload-pdf instead."
+        )
 
-    extracted_text = extract_text_from_pdf(
-        pdf_path
-    )
+    try:
+        extracted_text = extract_text_from_pdf(str(pdf_path))
 
-    document_data = create_document_data(
-        extracted_text,
-        "test_document.pdf"
-    )
+        if not extracted_text or not extracted_text.strip():
+            raise HTTPException(
+                status_code=422,
+                detail="No readable text was found in the test PDF."
+            )
 
-    result = inspect_action(
-        document_data,
-        Action.ANSWER
-    )
-
-    return {
-        "document":
-            "test_document.pdf",
-
-        "source_type":
-            document_data.provenance.source_type,
-
-        "source_name":
-            document_data.provenance.source_name,
-
-        "trust_level":
-            document_data.provenance.trust_level,
-
-        "extracted_text":
+        document_data = create_document_data(
             extracted_text,
+            pdf_path.name
+        )
 
-        "requested_action":
-            Action.ANSWER,
+        result = inspect_action(document_data, Action.ANSWER)
 
-        "allowed":
-            result.allowed,
+        return {
+            "document": pdf_path.name,
+            "source_type": document_data.provenance.source_type,
+            "source_name": document_data.provenance.source_name,
+            "trust_level": document_data.provenance.trust_level,
+            "extracted_text": extracted_text,
+            "requested_action": Action.ANSWER,
+            "allowed": result.allowed,
+            "risk": result.risk,
+            "risk_score": result.risk_score,
+            "injection_detected": result.injection_detected,
+            "firewall_reason": result.reason
+        }
 
-        "risk":
-            result.risk,
+    except HTTPException:
+        raise
 
-        "risk_score":
-            result.risk_score,
-
-        "injection_detected":
-            result.injection_detected,
-
-        "firewall_reason":
-            result.reason
-    }
+    except Exception:
+        raise HTTPException(
+            status_code=422,
+            detail="The test PDF could not be processed."
+        )
 
 
 # --------------------------------------------------
-# PDF UPLOAD
+# PDF UPLOAD AND INSPECTION
 # --------------------------------------------------
 
 @app.post("/upload-pdf")
-async def upload_pdf(
-    file: UploadFile = File(...)
-):
+async def upload_pdf(file: UploadFile = File(...)):
+    temp_path = None
 
-    if file.content_type != "application/pdf":
+    try:
+        filename = Path(file.filename or "uploaded.pdf").name
 
-        return {
-            "error":
-                "Only PDF files are allowed."
-        }
+        # Validate the filename
+        if not filename.lower().endswith(".pdf"):
+            raise HTTPException(
+                status_code=400,
+                detail="Please upload a PDF file."
+            )
 
-    file_bytes = await file.read()
+        # Read uploaded bytes
+        file_bytes = await file.read()
 
-    with tempfile.NamedTemporaryFile(
-        suffix=".pdf",
-        delete=False
-    ) as temp_file:
+        # Maximum upload size: 10 MB
+        max_size = 10 * 1024 * 1024
 
-        temp_file.write(
-            file_bytes
+        if not file_bytes:
+            raise HTTPException(
+                status_code=400,
+                detail="The uploaded file is empty."
+            )
+
+        if len(file_bytes) > max_size:
+            raise HTTPException(
+                status_code=413,
+                detail="PDF must be 10 MB or smaller."
+            )
+
+        # Basic PDF signature check
+        if not file_bytes.startswith(b"%PDF-"):
+            raise HTTPException(
+                status_code=400,
+                detail="The file does not appear to be a valid PDF."
+            )
+
+        # Create a temporary file for extraction
+        with tempfile.NamedTemporaryFile(
+            suffix=".pdf",
+            delete=False
+        ) as temp_file:
+            temp_file.write(file_bytes)
+            temp_path = temp_file.name
+
+        # Extract text using the existing PDF reader
+        extracted_text = extract_text_from_pdf(temp_path)
+
+        if not extracted_text or not extracted_text.strip():
+            raise HTTPException(
+                status_code=422,
+                detail=(
+                    "No readable text was found. "
+                    "The PDF may be scanned or image-only."
+                )
+            )
+
+        # Create document provenance
+        document_data = create_document_data(
+            extracted_text,
+            filename
         )
 
-        temp_path = temp_file.name
+        # Inspect document content as information, not as executable instructions
+        result = inspect_action(
+            document_data,
+            Action.ANSWER
+        )
 
-    extracted_text = extract_text_from_pdf(
-        temp_path
-    )
+        return {
+            "filename": filename,
+            "source_type": document_data.provenance.source_type,
+            "source_name": document_data.provenance.source_name,
+            "trust_level": document_data.provenance.trust_level,
+            "extracted_text": extracted_text,
+            "requested_action": Action.ANSWER,
+            "allowed": result.allowed,
+            "risk": result.risk,
+            "risk_score": result.risk_score,
+            "injection_detected": result.injection_detected,
+            "firewall_reason": result.reason
+        }
 
-    Path(temp_path).unlink()
+    except HTTPException:
+        raise
 
-    document_data = create_document_data(
-        extracted_text,
-        file.filename
-    )
+    except Exception:
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                "PDF processing failed. "
+                "Please check the PDF and try another file."
+            )
+        )
 
-    result = inspect_action(
-        document_data,
-        Action.ANSWER
-    )
+    finally:
+        # Clean up temporary files even when extraction fails
+        if temp_path:
+            Path(temp_path).unlink(missing_ok=True)
 
-    return {
-        "filename":
-            file.filename,
-
-        "source_type":
-            document_data.provenance.source_type,
-
-        "source_name":
-            document_data.provenance.source_name,
-
-        "trust_level":
-            document_data.provenance.trust_level,
-
-        "extracted_text":
-            extracted_text,
-
-        "allowed":
-            result.allowed,
-
-        "risk":
-            result.risk,
-
-        "risk_score":
-            result.risk_score,
-
-        "injection_detected":
-            result.injection_detected,
-
-        "firewall_reason":
-            result.reason
-    }
+        await file.close()
 
 
 # --------------------------------------------------
@@ -435,49 +368,20 @@ async def upload_pdf(
 # --------------------------------------------------
 
 @app.post("/inspect-web")
-def inspect_web(
-    content: str,
-    website: str
-):
+def inspect_web(content: str, website: str):
+    web_data = create_web_data(content, website)
 
-    web_data = create_web_data(
-        content,
-        website
-    )
-
-    result = inspect_action(
-        web_data,
-        Action.ANSWER
-    )
+    result = inspect_action(web_data, Action.ANSWER)
 
     return {
-        "source_type":
-            web_data.provenance.source_type,
-
-        "source_name":
-            web_data.provenance.source_name,
-
-        "trust_level":
-            web_data.provenance.trust_level,
-
-        "content":
-            content,
-
-        "requested_action":
-            Action.ANSWER,
-
-        "allowed":
-            result.allowed,
-
-        "risk":
-            result.risk,
-
-        "risk_score":
-            result.risk_score,
-
-        "injection_detected":
-            result.injection_detected,
-
-        "firewall_reason":
-            result.reason
+        "source_type": web_data.provenance.source_type,
+        "source_name": web_data.provenance.source_name,
+        "trust_level": web_data.provenance.trust_level,
+        "content": content,
+        "requested_action": Action.ANSWER,
+        "allowed": result.allowed,
+        "risk": result.risk,
+        "risk_score": result.risk_score,
+        "injection_detected": result.injection_detected,
+        "firewall_reason": result.reason
     }

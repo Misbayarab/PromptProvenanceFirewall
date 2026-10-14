@@ -100,3 +100,11 @@ See the [LICENSE](LICENSE) file for the complete license terms.
 ## Documentation
 
 Additional documentation updates to improve project setup and usage instructions.
+---
+
+## Security Considerations
+
+- Treat content from external sources as untrusted input.
+- Review risk assessments before allowing sensitive tool actions.
+- Keep security logs available for auditing and troubleshooting.
+- Test the firewall with both benign inputs and simulated prompt injection attempts.

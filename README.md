@@ -97,3 +97,6 @@ The main objectives of the project are:
 This project is licensed under the MIT License.
 
 See the [LICENSE](LICENSE) file for the complete license terms.
+## Documentation
+
+Additional documentation updates to improve project setup and usage instructions.
